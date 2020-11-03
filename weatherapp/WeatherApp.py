@@ -18,7 +18,7 @@ class WeatherApp:
 		# Read default configuration file for api url
 		self.config = configparser.ConfigParser()
 		self.config.read('../config.ini')
-		self.api_url = self.config['url']['API_URL']
+		self.api_url = self.config['url']['api_url']
 
 		# Create logger instance and setup argparser
 		self.logger = self._setuplogger()

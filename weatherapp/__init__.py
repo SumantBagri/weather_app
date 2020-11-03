@@ -1,1 +1,1 @@
-from WeatherApp import WeatherApp
+from weatherapp.WeatherApp import WeatherApp
