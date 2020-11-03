@@ -11,8 +11,10 @@ from datetime import datetime
 
 class WeatherApp:
 	def __init__(self):
-		#Initialize data dictionary
+		# Initialize data dictionary
 		self.data_dict = {}
+		# Initialize directories
+		self.makedirs()
 		# Read default configuration file for api url
 		self.config = configparser.ConfigParser()
 		self.config.read('../config.ini')
@@ -27,6 +29,10 @@ class WeatherApp:
 								  2=WARNING (default)")
 		args = parser.parse_args()
 		if args.loglevel == 0: self.logger.setLevel(logging.DEBUG)
+
+	def makedirs(self):
+		if not os.path.isdir("data/"): os.mkdir("data")
+		if not os.path.isdir("logs/"): os.mkdir("logs")
 
 	def _setuplogger(self):
 		file = 'logs/' + datetime.today().strftime("%d-%m-%Y") + '.log'
