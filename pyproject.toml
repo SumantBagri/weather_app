@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "Weather App"
+name = "weatherapp"
 version = "0.1.0"
 description = "Retrieve Hong Kong weather data using API and logs the data for specific locations locally. Older data files are automatically removed periodically."
 authors = ["Sumant Bagri"]
@@ -15,4 +15,4 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-wapp = "WeatherApp:test"
+wapp = "WeatherApp.WeatherApp:main"
