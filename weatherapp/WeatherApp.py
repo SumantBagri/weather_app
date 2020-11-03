@@ -111,6 +111,11 @@ class WeatherApp:
 
 		self.logger.info("Data logging completed")
 
+def run():
+	weather_app = WeatherApp()
+	weather_app.get_data()
+	weather_app.log_data()
+
 if __name__ == '__main__':
 	weather_app = WeatherApp()
 	weather_app.get_data()
