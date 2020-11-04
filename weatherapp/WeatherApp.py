@@ -35,7 +35,7 @@ class WeatherApp:
 		if not os.path.isdir("logs/"): os.mkdir("logs")
 
 	def _setuplogger(self):
-		file = 'logs/' + datetime.today().strftime("%d-%m-%Y") + '.log'
+		file = 'logs/' + datetime.today().strftime("%Y-%m-%d") + '.log'
 		if not os.path.exists(file):
 			with open(file, 'w'): pass
 
@@ -93,7 +93,7 @@ class WeatherApp:
 						self.data_dict[col_name] = 'field_not_found'
 
 	def log_data(self):
-		date = datetime.today().strftime("%d-%m-%Y")
+		date = datetime.today().strftime("%Y-%m-%d")
 		csv_file = 'data/' + str(date) + '.csv'
 
 		if not os.path.exists(csv_file):
