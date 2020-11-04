@@ -1,0 +1,124 @@
+---
+- hosts: gcp
+  gather_facts: true
+
+  vars:
+    weather_app: '{{ ansible_env.HOME }}/weather_app'
+
+  environment:
+    PATH: '{{ ansible_env.HOME }}/.pyenv/bin:{{ ansible_env.PATH }}'
+
+  tasks:
+  - name: Check if pyenv is installed
+    command: which pyenv
+    register: pyenv_present
+    ignore_errors: yes
+
+  - name: Curl pyenv installer script
+    get_url:
+      url: https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer
+      dest: $HOME/pyenv-installer.sh
+      mode: '0755'
+    when: pyenv_present is failed
+
+  - name: Install pyenv
+    shell: $HOME/pyenv-installer.sh
+    when: pyenv_present is failed
+
+  - name: Copy configuration editor
+    copy:
+      src: addTo_Path.sh
+      dest: $HOME/addTo_Path.sh
+      mode: '0755'
+    when: pyenv_present is failed
+
+  - name: Check and add pyenv to PATH
+    shell: $HOME/addTo_Path.sh
+    when: pyenv_present is failed
+
+  - name: Remove setup scripts
+    file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+      - $HOME/pyenv-installer.sh
+      - $HOME/addTo_Path.sh
+    when: pyenv_present is failed
+
+  - name: Check and install python version 3.9.0
+    shell: pyenv versions | grep 3.9.0 || pyenv install 3.9.0 
+
+  - name: Check and create virtual environment weather
+    shell: pyenv versions | grep weather || pyenv virtualenv 3.9.0 weather
+
+  - name: Install git
+    become: yes
+    package:
+      name: git
+      state: present
+
+  - name: Install poetry
+    pip:
+      name: poetry
+    environment:
+      PATH: '{{ ansible_env.HOME }}/.pyenv/versions/weather/bin:{{ ansible_env.PATH }}' 
+
+  - name: Remove local git repo
+    file:
+      path: '{{ ansible_env.HOME }}/weather_app'
+      state: absent
+
+  - name: Get application package from github
+    git:
+      repo: https://github.com/SumantBagri/weather_app.git
+      dest: '{{ ansible_env.HOME }}/weather_app'
+
+  - name: Deploy configuration file, build and install package
+    shell: "chdir={{ weather_app }} {{ item }}"
+    with_items:
+      - python config_deploy.py
+      - poetry build
+      - pip install {{ weather_app }}/dist/*.whl
+    environment:
+      PATH: '{{ ansible_env.HOME }}/.pyenv/versions/weather/bin:{{ ansible_env.PATH }}' 
+
+  # - name: Rehash pyenv for bash
+  #   shell: pyenv rehash && hash -r
+  #   when: "{{ ansible_env.SHELL }}" == '/bin/bash'
+
+  # - name: Rehash pyenv for zsh
+  #   shell: pyenv rehash && rehash
+  #   when: "{{ ansible_env.SHELL }}" == '/bin/zsh'
+
+  - name: Install cron
+    become: yes
+    package:
+      name: cron
+      state: present
+
+  - name: Add cron job for weatherapp runs
+    cron:
+      name: "Automate weather data logging"
+      minute: "0"
+      hour: "6-18"
+      dow: "1-5"
+      state: present
+      job: "export PATH=\"$HOME/.pyenv/bin:$PATH\" \ 
+            && eval \"$(pyenv init -)\" \
+            && eval \"$(pyenv virtualenv-init -)\" \
+            && pyenv activate weather \
+            && cd {{ weather_app }}/weatherapp \
+            && wapp -ll 0"
+
+  - name: Add cron job for cleanup of old files
+    cron:
+      name: "Automate removal of old weather data"
+      minute: "0"
+      hour: "17"
+      dow: "*"
+      state: present
+      job: "cd {{ weather_app }}/weatherapp && /bin/bash cleanup.sh"
+
+
+
+
